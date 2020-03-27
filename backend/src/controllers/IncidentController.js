@@ -24,7 +24,7 @@ module.exports = {
         res.header('X-Total-Count', count['count(*)']);
 
         const incidents = await connection('incidents')
-            .join('ongs', 'ong_id', '=', 'incidents.ong_id')
+            .join('ongs', 'ongs.id', '=', 'incidents.ong_id')
             .limit(5)
             .offset( (page - 1) * 5)
             .select([
@@ -35,7 +35,6 @@ module.exports = {
                 'ongs.city',
                 'ongs.uf'
             ]);
-
         return res.json(incidents)
     },
 
@@ -51,9 +50,15 @@ module.exports = {
         if(incident.ong_id != ong_id){
             return res.status(401).json({ error: "Operation not permitted." })
         } else {
-            await connection('incidents').where('id', id).delete();
-
-            return res.status(204).send();
+            try{
+                await connection('incidents').where('id', id).delete();
+                return res.status(204).send();
+            }catch(err){
+                return res.status(500).json({
+                    message: "incident nao existe"
+                })
+            }
+            
         }
     }
 }
